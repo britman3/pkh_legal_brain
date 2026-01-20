@@ -1,0 +1,38 @@
+
+version: "3.9"
+services:
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    networks: [appnet]
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    networks: [appnet]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+      - frontend
+    networks: [appnet]
+
+networks:
+  appnet:
+
+volumes:
+  caddy_data:
+  caddy_config:
