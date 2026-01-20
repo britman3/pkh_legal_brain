@@ -8,6 +8,7 @@ from app.services.rag import enrich_with_rag
 from app.services.model_router import analyze_with_router
 from app.services.prompts import build_prompt
 from app.services.redact import redact_sensitive
+from app.services.rules_storage import get_enabled_rules
 from app.utils.citations import attach_citations
 
 router = APIRouter()
@@ -43,16 +44,19 @@ async def analyze_pack(file: UploadFile = File(...)):
     # 5) RAG enrichment (PKH checklist + glossary + gotchas)
     context = enrich_with_rag(safe_chunks)
 
-    # 6) Build Nick-voice, RAG-augmented prompt
-    prompt = build_prompt(context)
+    # 6) Get custom rules from dashboard
+    custom_rules = get_enabled_rules()
 
-    # 7) Route to best model(s)
+    # 7) Build Nick-voice, RAG-augmented prompt with custom rules
+    prompt = build_prompt(context, custom_rules=custom_rules)
+
+    # 8) Route to best model(s)
     llm_result = await analyze_with_router(prompt, meta={
         "page_map": [c["meta"] for c in chunks],
         "size": len(pages)
     })
 
-    # 8) Attach page-level citations to claims
+    # 9) Attach page-level citations to claims
     report_md, flags, confidence = attach_citations(llm_result, chunks)
 
     return AnalysisResponse(report_markdown=report_md, flags=flags, confidence=confidence)
