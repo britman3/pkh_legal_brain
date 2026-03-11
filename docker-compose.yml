@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pkh
+      POSTGRES_PASSWORD: pkh_password_change_me
+      POSTGRES_DB: pkh_legal_brain
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [appnet]
+    ports:
+      - "5432:5432"
+
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+      - "8000"
+    networks: [appnet]
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    networks: [appnet]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./frontend/dist:/srv:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [appnet]
+
+networks:
+  appnet:
+
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres_data:

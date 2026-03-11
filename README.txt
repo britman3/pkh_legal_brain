@@ -1,0 +1,1 @@
+Copy the contents from the canvas document into this structure.

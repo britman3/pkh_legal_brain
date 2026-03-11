@@ -1,0 +1,32 @@
+:8080 {
+  encode zstd gzip
+
+  route {
+    # A) Docs & schema: FastAPI serves these at root (/docs, /openapi.json)
+    #    Strip /api ONLY for these
+    @apidocs path /api/docs /api/docs/* /api/redoc /api/openapi.json
+    handle @apidocs {
+      uri strip_prefix /api
+      reverse_proxy backend:8000
+    }
+
+# B) Normal API calls when FE uses /api/... (STRIP /api before forwarding)
+@api_preserve path /api/*
+handle @api_preserve {
+  uri strip_prefix /api
+  reverse_proxy backend:8000
+}
+
+    # C) If FE calls root endpoints (no /api), forward them too
+    #    (so /analyze/pack hits backend)
+    @api_root path /analyze/* /health /status
+    reverse_proxy @api_root backend:8000
+
+    # D) Everything else = SPA
+    handle {
+      root * /srv
+      try_files {path} /index.html
+      file_server
+    }
+  }
+}

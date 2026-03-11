@@ -1,0 +1,28 @@
+# Environment files
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Node
+frontend/node_modules/
+node_modules/
+
+# Build output
+frontend/dist/
+
+# Backups
+backups/
+
+# Zip files
+*.zip
+
+# Misc
+.DS_Store
+*.backup
+*.backup
